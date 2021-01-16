@@ -58,14 +58,14 @@ class TGSDatasetAlbu(Dataset):
     def __len__(self):
         return len(self.sample_names)
 
-def build_validation_set(train_df):
+def build_validation_set(train_df, data_path):
     """
     Build a validation dataset from the train dataset. We are
     using stratified sampling to split the dataset and it is sampled
     by taking into accound the coverage of salt beds in the images
     """
-
-    train_df['coverage'] = train_df.id.apply(load_mask)/pow(101, 2)
+    load_func = lambda x: load_mask(x, data_path+'train/masks')
+    train_df['coverage'] = train_df.id.apply(load_func)/pow(101, 2)
     train_df['cuts'] = pd.cut(train_df.coverage, bins=10,
                               labels=list(range(10)))
     train_df = train_df.set_index('id')
@@ -81,7 +81,7 @@ def build_train_val_loaders(data_path, batch_size):
     """
 
     train_df = pd.read_csv(data_path+'train.csv')
-    train_set, val_set = build_validation_set(train_df)
+    train_set, val_set = build_validation_set(train_df, data_path)
     train_dataset = TGSDatasetAlbu(train_set, data_path+'train/images',
                                    data_path+'train/masks', train_transform)
     val_dataset = TGSDatasetAlbu(val_set, data_path+'train/images',
