@@ -1,4 +1,6 @@
 import time
+import os
+
 import torch
 import torch.nn as nn
 import numpy as np
@@ -50,13 +52,15 @@ def validate(dataloader, model, loss_fn, device):
     return np.mean(running_loss), np.mean(running_iou)
 
 
-def train_epochs(train_dataloader, val_dataloader, model, loss_fn, num_epochs):
+def train_epochs(train_dataloader, val_dataloader, model,
+                 loss_fn, num_epochs, save_path):
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     optimizer = torch.optim.Adam(model.parameters())
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max',
                                                            verbose=True)
     stopper = EarlyStopping(verbose=True,
-                            path='saved_models/unet_model_best.pth',
+                            path=os.path.join(save_path, 'unet_model_best.pth'),
                             patience=15, mode='max')
     steps = len(train_dataloader.dataset)//train_dataloader.batch_size
     best_model = model = model.to(device)
@@ -91,7 +95,7 @@ def train_epochs(train_dataloader, val_dataloader, model, loss_fn, num_epochs):
         if stopper.early_stop:
             break
 
-    return val_losses, val_ious, best_model
+    return (train_losses, val_losses), (train_ious, val_ious), best_model
 
 
 if __name__ == '__main__':
@@ -109,10 +113,11 @@ if __name__ == '__main__':
 
     # Train Model with cross entropy loss first
     num_epochs = 30
+    save_path = 'saved_models/'
     print('Training with CrossEntropy loss')
     losses, ious, best_model = train_epochs(tloader, vloader,
                                             unet, cross_entropy_loss,
-                                            num_epochs)
+                                            num_epochs, save_path)
 
     # then with lovasz_loss to get the maximum accuracy
     num_epochs = 70
