@@ -12,7 +12,6 @@ Salt is also much easier to detech that oil and gas and so if a model can be tra
 it will be very profitable for the Oil and Gas companies because it makes oil discovery faster. 
 
 ## Setup
-=======
 clone the repo and install the packages with `pip install -r requirements.txt`
 
 At the time being I was using a custom build of the popular 
